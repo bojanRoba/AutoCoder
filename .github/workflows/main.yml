@@ -1,29 +1,52 @@
-name: Access Issue Information
+name: Interacting with LLMs - AutoCoder Bot
 
 on:
   issues:
-    types: [opened, reopened]
+    types: [opened, labeled]
 
 jobs:
-  access_issue_info:
+  generate-code:
+    name: Generate Code with ChatGPT
     runs-on: ubuntu-latest
+    
+    # Job-level condition: Execute ONLY if the issue has the 'autocoder-bot' label
+    if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
+
+    permissions:
+      contents: read
+      issues: read
 
     steps:
-      # Objective 2: Checkout the repository using the appropriate action
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Objectives 3 & 4: Set environment variables and echo each attribute distinctively
-      - name: Print Issue Information
+      - name: Make Script Executable
+        run: chmod +x ./script.sh
+
+      - name: Run AutoCoder Script
+        id: generate_code
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_ASSIGNEES: ${{ join(github.event.issue.assignees.*.login, ', ') }}
-          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ', ') }}
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        # Passing variables as positional arguments as required by the script structure
+        run: ./script.sh ${{ env.ISSUE_NUMBER }} ${{ env.REPOSITORY }} ${{ env.GITHUB_TOKEN }} ${{ env.OPENAI_API_KEY }}
+
+      - name: Upload Generated Code Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autocoder-artifact
+          path: autocoder-bot/
+          if-no-files-found: error
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: autocoder-artifact
+          path: autocoder-artifact
+
+      - name: Display Generated Code Structure
         run: |
-          echo "Issue Number: ${ISSUE_NUMBER}"
-          echo "Issue Title: ${ISSUE_TITLE}"
-          echo "Issue Body: ${ISSUE_BODY}"
-          echo "Issue Assignees: ${ISSUE_ASSIGNEES}"
-          echo "Issue Labels: ${ISSUE_LABELS}"
+          echo "Listing all generated files and directories recursively:"
+          ls -lR autocoder-artifact
