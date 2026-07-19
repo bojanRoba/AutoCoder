@@ -2,7 +2,7 @@ name: Autocoder Bot Pipeline
 
 on:
   issues:
-    types: [opened, labeled, edited]
+    types: [opened, labeled, reopened]
 
 # Set explicit, least-privilege permissions for the GITHUB_TOKEN
 permissions:
