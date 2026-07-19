@@ -48,7 +48,7 @@ if [[ -z "$ISSUE_BODY" ]]; then
 fi
 
 # Define clear, additional instructions for GPT regarding the response format
-INSTRUCTIONS="Based on the description below, please generate a JSON object where the keys represent file paths and the values are the corresponding code snippets for a production-ready application. The response should be a valid strictly JSON object without any additional formatting, markdown, or characters outside the JSON structure."
+INSTRUCTIONS="You are a code generation bot. Based on the description below, generate a JSON object where keys represent file paths and values represent the raw code. CRITICAL: You must return ONLY valid, raw JSON. Do NOT wrap the response in markdown code blocks, backticks (\`\`\`json), or add any explanatory text."
 
 # Combine the instructions with the issue body to form the full prompt
 FULL_PROMPT="$INSTRUCTIONS\n\n$ISSUE_BODY"
