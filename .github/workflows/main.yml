@@ -1,20 +1,20 @@
-name: Interacting with LLMs - AutoCoder Bot
+name: Interacting with LLMs - Autocoder Bot
 
 on:
   issues:
-    types: [opened, reopened, labeled]
+    types: [opened, labeled, edited]
 
 jobs:
-  generate-code:
+  autocoder:
     name: Generate Code with ChatGPT
     runs-on: ubuntu-latest
     
-    # Job-level condition: Execute ONLY if the issue has the 'autocoder-bot' label
+    # Job-level condition: Execute only if the issue contains the 'autocoder-bot' label
     if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
 
     permissions:
-      contents: read
       issues: read
+      contents: read
 
     steps:
       - name: Checkout Repository
@@ -23,17 +23,17 @@ jobs:
       - name: Make Script Executable
         run: chmod +x ./scripts/script.sh
 
-      - name: Run AutoCoder Script
+      - name: Generate Code with ChatGPT
         id: generate_code
         env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        # Passing variables as positional arguments as required by the script structure
-        run: ./scripts/script.sh ${{ env.ISSUE_NUMBER }} ${{ env.REPOSITORY }} ${{ env.GITHUB_TOKEN }} ${{ env.OPENAI_API_KEY }}
+        # Executes the script while passing environment variables and positional arguments
+        run: ./scripts/script.sh ${{ env.ISSUE_NUMBER }} ${{ env.REPOSITORY }}
 
-      - name: Upload Generated Code Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: autocoder-artifact
@@ -46,7 +46,5 @@ jobs:
           name: autocoder-artifact
           path: autocoder-artifact
 
-      - name: Display Generated Code Structure
-        run: |
-          echo "Listing all generated files and directories recursively:"
-          ls -lR autocoder-artifact
+      - name: Display Generated Code using the ls command
+        run: ls -R autocoder-artifact
